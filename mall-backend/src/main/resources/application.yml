@@ -33,6 +33,10 @@ jwt:
   secret: your-secret-key-change-in-production-please-use-at-least-256-bits
   expiration: 86400000
 
+logging:
+  file:
+    path: logs
+
 ---
 # 开发环境配置
 spring:

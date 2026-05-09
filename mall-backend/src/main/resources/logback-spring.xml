@@ -69,6 +69,8 @@
     <springProfile name="dev">
         <root level="DEBUG">
             <appender-ref ref="CONSOLE"/>
+<!--            <appender-ref ref="FILE_INFO"/>-->
+<!--            <appender-ref ref="FILE_ERROR"/>-->
         </root>
         <logger name="com.mall" level="DEBUG"/>
         <logger name="com.mall.mapper" level="DEBUG"/>
