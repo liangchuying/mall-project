@@ -1,6 +1,8 @@
 spring:
   application:
     name: mall-system
+  profiles:
+    active: dev
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -30,3 +32,18 @@ server:
 jwt:
   secret: your-secret-key-change-in-production-please-use-at-least-256-bits
   expiration: 86400000
+
+---
+# 开发环境配置
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+---
+# 生产环境配置
+spring:
+  config:
+    import: classpath:application-prod.yml
+    activate:
+      on-profile: prod

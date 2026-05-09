@@ -165,6 +165,60 @@ jwt:
   secret: your-secret-key-change-in-production
 ```
 
+#### 环境配置
+
+项目支持多环境配置，默认使用 `dev` 环境。
+
+**开发环境** (`application-dev.yml`)：
+```yaml
+spring:
+  profiles:
+    active: dev
+```
+
+**生产环境** (`application-prod.yml`)：
+```yaml
+spring:
+  profiles:
+    active: prod
+```
+
+通过环境变量切换：
+```bash
+# 开发环境
+java -jar mall-system.jar --spring.profiles.active=dev
+
+# 生产环境
+java -jar mall-system.jar --spring.profiles.active=prod
+```
+
+#### JWT 密钥配置
+
+**生产环境必须修改 JWT 密钥！**
+
+生成随机密钥：
+```bash
+# 运行密钥生成工具
+java -cp target/classes com.mall.utils.SecretKeyGenerator
+```
+
+或使用环境变量（推荐）：
+```bash
+export JWT_SECRET=your-generated-secret-key
+```
+
+配置文件方式：
+```yaml
+jwt:
+  secret: ${JWT_SECRET:your-default-secret-key}
+```
+
+**安全建议**：
+- 生产环境使用至少 256 位随机密钥
+- 不要在代码中硬编码密钥
+- 使用环境变量或密钥管理服务
+- 定期更换密钥
+
 ### 3. 启动项目
 
 ```bash
@@ -287,13 +341,13 @@ mvn spring-boot:run
 
 ## 注意事项
 
-1. 生产环境请修改 JWT 密钥
-2. 建议添加日志配置（Logback）
-3. 建议添加接口文档（Swagger/Knife4j）
-4. 建议添加全局异常处理
-5. 建议集成 Redis 缓存
-6. 建议添加参数校验（@Validated）
-7. 建议添加接口限流和防刷
-8. 建议添加分布式锁
-9. 建议添加消息队列（RabbitMQ/RocketMQ）
-10. 建议添加接口幂等性处理
+- [x] 生产环境请修改 JWT 密钥
+- [ ] 建议添加日志配置（Logback）
+- [ ] 建议添加接口文档（Swagger/Knife4j）
+- [ ] 建议添加全局异常处理
+- [ ] 建议集成 Redis 缓存
+- [ ] 建议添加参数校验（@Validated）
+- [ ] 建议添加接口限流和防刷
+- [ ] 建议添加分布式锁
+- [ ] 建议添加消息队列（RabbitMQ/RocketMQ）
+- [ ] 建议添加接口幂等性处理
