@@ -15,7 +15,7 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/doc.html", "/webjars/**", "/swagger-resources/**", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
+                        .requestMatchers("/api/doc.html", "/api/webjars/**", "/api/swagger-resources/**", "/api/v3/api-docs/**", "/api/swagger-ui/**").permitAll()
                         .anyRequest().permitAll());
         return http.build();
     }
