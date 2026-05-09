@@ -1,13 +1,20 @@
 package com.mall.vo;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "用户登录响应数据")
 public class LoginResponseVO {
 
+    @Schema(description = "用户ID", example = "1")
     private Long userId;
 
+    @Schema(description = "用户名", example = "testuser")
     private String username;
 
+    @Schema(description = "昵称", example = "测试用户")
     private String nickname;
 
+    @Schema(description = "JWT Token", example = "eyJhbGciOiJIUzI1NiJ9...")
     private String token;
 
     public LoginResponseVO() {

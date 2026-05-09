@@ -11,6 +11,7 @@
 | MyBatis-Plus | 3.5.14 | ORM 框架 |
 | Spring Security | - | 安全框架 |
 | JWT | 0.12.3 | 身份认证 |
+| Knife4j | 4.4.0 | 接口文档 |
 | Hutool | 5.8.25 | 工具类库 |
 | Lombok | - | 简化代码 |
 
@@ -28,6 +29,7 @@ mall-backend/
 │   │   │   ├── config/                       # 配置包
 │   │   │   │   ├── CorsConfig.java            # 跨域请求配置
 │   │   │   │   ├── JwtConfig.java             # JWT 配置属性类
+│   │   │   │   ├── Knife4jConfig.java         # Knife4j 接口文档配置
 │   │   │   │   ├── MyBatisPlusConfig.java     # MyBatis-Plus 配置（分页等）
 │   │   │   │   ├── MyMetaObjectHandler.java   # 自动填充处理器（createTime/updateTime）
 │   │   │   │   ├── SecurityConfig.java        # Spring Security 安全配置
@@ -90,6 +92,7 @@ mall-backend/
 |------|------|
 | `CorsConfig.java` | 配置跨域请求支持，允许所有来源、方法和请求头 |
 | `JwtConfig.java` | 使用 `@ConfigurationProperties` 读取 JWT 配置（secret、expiration） |
+| `Knife4jConfig.java` | Knife4j 接口文档配置，配置 API 文档信息和 JWT 认证 |
 | `MyBatisPlusConfig.java` | 配置 MyBatis-Plus 拦截器，支持 MySQL 分页 |
 | `MyMetaObjectHandler.java` | 实现 `MetaObjectHandler`，自动填充创建时间和更新时间 |
 | `SecurityConfig.java` | Spring Security 安全配置，配置认证规则和过滤器 |
@@ -294,6 +297,25 @@ mvn spring-boot:run
   }
   ```
 
+#### 接口文档
+项目已集成 Knife4j 接口文档，启动后访问：
+```
+http://localhost:8080/doc.html
+```
+
+**功能特性**：
+- 在线查看所有 API 接口
+- 支持在线调试接口
+- 支持 JWT Token 认证
+- 接口参数和响应示例
+- 接口分组管理
+
+**使用说明**：
+1. 点击右上角「Authorize」按钮
+2. 输入 JWT Token（登录接口返回的 token）
+3. 点击「Authorize」确认
+4. 所有需要认证的接口会自动携带 Token
+
 ## 已实现功能
 
 - [x] 基础框架配置
@@ -302,6 +324,7 @@ mvn spring-boot:run
 - [x] MyBatis-Plus 配置（分页、逻辑删除、自动填充）
 - [x] 统一响应结果封装
 - [x] 跨域配置
+- [x] Knife4j 接口文档
 - [x] 用户注册/登录接口
 
 ## 配置说明
@@ -378,7 +401,7 @@ mvn spring-boot:run
 
 - [x] 生产环境请修改 JWT 密钥
 - [x] 已添加日志配置（Logback）
-- [ ] 建议添加接口文档（Swagger/Knife4j）
+- [x] 已添加接口文档（Knife4j）
 - [ ] 建议添加全局异常处理
 - [ ] 建议集成 Redis 缓存
 - [ ] 建议添加参数校验（@Validated）
