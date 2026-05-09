@@ -219,6 +219,41 @@ jwt:
 - 使用环境变量或密钥管理服务
 - 定期更换密钥
 
+#### 日志配置
+
+项目已集成 Logback 日志框架，支持多环境日志配置。
+
+**开发环境**：
+- 日志级别：DEBUG
+- 输出目标：控制台
+- 便于开发调试
+
+**生产环境**：
+- 日志级别：INFO
+- 输出目标：控制台 + 文件
+  - `mall-system-info.log` - INFO 级别日志
+  - `mall-system-error.log` - ERROR 级别日志
+- 日志文件最大 100MB，保留 30 天
+- 使用异步日志提升性能
+
+**日志路径配置**：
+```yaml
+# 生产环境通过环境变量配置
+export LOG_PATH=/var/log/mall-system
+```
+
+或配置文件方式：
+```yaml
+logging:
+  file:
+    path: ${LOG_PATH:/var/log/mall-system}
+```
+
+**日志格式**：
+```
+2026-05-09 22:30:15.123 [http-nio-8080-exec-1] INFO  c.m.controller.AuthController - 用户登录成功
+```
+
 ### 3. 启动项目
 
 ```bash
@@ -342,7 +377,7 @@ mvn spring-boot:run
 ## 注意事项
 
 - [x] 生产环境请修改 JWT 密钥
-- [ ] 建议添加日志配置（Logback）
+- [x] 已添加日志配置（Logback）
 - [ ] 建议添加接口文档（Swagger/Knife4j）
 - [ ] 建议添加全局异常处理
 - [ ] 建议集成 Redis 缓存
