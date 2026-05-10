@@ -1,0 +1,239 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary-50: #dbeafe;
+  --color-primary-100: #bfdbfe;
+  --color-primary-200: #93c5fd;
+  --color-primary-300: #60a5fa;
+  --color-primary-400: #3b82f6;
+  --color-primary-500: #2563eb;
+  --color-primary-600: #1e40af;
+  --color-primary-700: #1e3a8a;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
+
+  --color-accent-coral: #f97316;
+  --color-accent-coral-hover: #ea580c;
+  --color-accent-purple: #8b5cf6;
+  --color-accent-pink: #ec4899;
+
+  --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-cta: 0 4px 12px rgba(249, 115, 22, 0.3);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  width: 100%;
+}
+
+img {
+  display: block;
+}
+
+/* 玻璃拟态 Glassmorphism */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.glass-dark {
+  background: rgba(17, 24, 39, 0.7);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+              0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+}
+
+.glass-nav {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.glass-button {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px) saturate(180%);
+  -webkit-backdrop-filter: blur(8px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04),
+              0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+}
+
+/* 悬浮发光效果 */
+.glow-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glow-hover:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.glow-primary-hover:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08),
+              0 0 30px rgba(59, 130, 246, 0.15);
+}
+
+/* 渐变边框效果 */
+.gradient-border {
+  position: relative;
+  background: white;
+  border-radius: 1rem;
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
+  border-radius: 1.1rem;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.gradient-border:hover::before {
+  opacity: 1;
+}
+
+/* 内光效果 */
+.inner-glow {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+              0 0 20px rgba(255, 255, 255, 0.05) inset;
+}
+
+/* 动态光晕效果 */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(59, 130, 246, 0.4);
+  }
+}
+
+.pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+/* 磨砂玻璃覆盖层 */
+.frosted-overlay {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px) saturate(150%);
+  -webkit-backdrop-filter: blur(10px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* 高级卡片效果 */
+.premium-card {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 1.5rem;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.2) inset,
+    0 0 30px rgba(59, 130, 246, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.premium-card:hover {
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.08),
+    0 0 40px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(255, 255, 255, 0.3) inset,
+    0 0 40px rgba(59, 130, 246, 0.1);
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.7);
+}
+
+/* 浮动按钮效果 */
+.floating-button {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 9999px;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.floating-button:hover {
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.08),
+    0 0 20px rgba(0, 0, 0, 0.05),
+    0 0 0 1px rgba(255, 255, 255, 0.3) inset;
+  transform: translateY(-2px);
+}
+
+/* 精致输入框 */
+.premium-input {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 0.75rem;
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.04),
+    0 0 0 1px rgba(255, 255, 255, 0.3) inset;
+  transition: all 0.3s ease;
+}
+
+.premium-input:focus {
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.08),
+    0 0 0 3px rgba(59, 130, 246, 0.1),
+    0 0 20px rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.5);
+  outline: none;
+}
+
+/* 响应式优化 */
+@media (prefers-reduced-motion: reduce) {
+  .glow-hover,
+  .glow-primary-hover,
+  .glow-coral-hover,
+  .premium-card,
+  .floating-button {
+    transition: none;
+  }
+
+  .pulse-glow {
+    animation: none;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+}
