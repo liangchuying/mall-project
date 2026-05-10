@@ -47,57 +47,60 @@ services:
     networks:
       - mall-network
 
-  # RocketMQ NameServer
-  rocketmq-namesrv:
-    image: apache/rocketmq:5.2.0
-    container_name: mall-rocketmq-namesrv
-    restart: unless-stopped
-    ports:
-      - "${ROCKETMQ_NAMESRV_PORT:-9876}:9876"
-    environment:
-      JAVA_OPT_EXT: "-Xms512m -Xmx512m"
-    command: sh -c "rm -rf /home/rocketmq/logs/* && mqnamesrv"
-    volumes:
-      - rocketmq-logs:/home/rocketmq/logs
-    networks:
-      - mall-network
+  # RocketMQ NameServer (ARM64/Mac 兼容性问题，已禁用)
+  # 如需启用，请取消注释并确保在 x86_64 环境下运行
+  # rocketmq-namesrv:
+  #   image: apache/rocketmq:5.2.0
+  #   platform: linux/amd64
+  #   container_name: mall-rocketmq-namesrv
+  #   restart: unless-stopped
+  #   ports:
+  #     - "${ROCKETMQ_NAMESRV_PORT:-9876}:9876"
+  #   environment:
+  #     JAVA_OPT_EXT: "-Xms512m -Xmx512m"
+  #   command: sh -c "rm -rf /home/rocketmq/logs/* && /home/rocketmq/rocketmq-5.2.0/bin/mqnamesrv"
+  #   volumes:
+  #     - rocketmq-logs:/home/rocketmq/logs
+  #   networks:
+  #     - mall-network
 
-  # RocketMQ Broker
-  rocketmq-broker:
-    image: apache/rocketmq:5.2.0
-    container_name: mall-rocketmq-broker
-    restart: unless-stopped
-    ports:
-      - "${ROCKETMQ_BROKER_PORT:-10909}:10909"
-      - "${ROCKETMQ_BROKER_HTTP_PORT:-10911}:10911"
-      - "${ROCKETMQ_BROKER_ADMIN_PORT:-10912}:10912"
-    environment:
-      JAVA_OPT_EXT: "-Xms1g -Xmx1g"
-      NAMESRV_ADDR: "rocketmq-namesrv:9876"
-    command: sh -c "rm -rf /home/rocketmq/store/* /home/rocketmq/logs/* && mqbroker -c /home/rocketmq/conf/broker.conf"
-    volumes:
-      - rocketmq-store:/home/rocketmq/store
-      - rocketmq-logs:/home/rocketmq/logs
-      - ./docker/rocketmq/broker.conf:/home/rocketmq/conf/broker.conf
-    depends_on:
-      rocketmq-namesrv:
-        condition: service_started
-    networks:
-      - mall-network
+  # RocketMQ Broker (ARM64/Mac 兼容性问题，已禁用)
+  # rocketmq-broker:
+  #   image: apache/rocketmq:5.2.0
+  #   platform: linux/amd64
+  #   container_name: mall-rocketmq-broker
+  #   restart: unless-stopped
+  #   ports:
+  #     - "${ROCKETMQ_BROKER_PORT:-10909}:10909"
+  #     - "${ROCKETMQ_BROKER_HTTP_PORT:-10911}:10911"
+  #     - "${ROCKETMQ_BROKER_ADMIN_PORT:-10912}:10912"
+  #   environment:
+  #     JAVA_OPT_EXT: "-Xms1g -Xmx1g"
+  #     NAMESRV_ADDR: "rocketmq-namesrv:9876"
+  #   command: sh -c "rm -rf /home/rocketmq/store/* /home/rocketmq/logs/* && /home/rocketmq/rocketmq-5.2.0/bin/mqbroker -c /home/rocketmq/conf/broker.conf"
+  #   volumes:
+  #     - rocketmq-store:/home/rocketmq/store
+  #     - rocketmq-logs:/home/rocketmq/logs
+  #     - ./docker/rocketmq/broker.conf:/home/rocketmq/conf/broker.conf
+  #   depends_on:
+  #     rocketmq-namesrv:
+  #       condition: service_started
+  #   networks:
+  #     - mall-network
 
   # RocketMQ Console (可选，用于管理 RocketMQ)
-  rocketmq-console:
-    image: apacherocketmq/rocketmq-dashboard:latest
-    container_name: mall-rocketmq-console
-    restart: unless-stopped
-    ports:
-      - "${ROCKETMQ_CONSOLE_PORT:-8180}:8080"
-    environment:
-      JAVA_OPTS: "-Xms256m -Xmx256m -Drocketmq.namesrv.addr=rocketmq-namesrv:9876"
-    depends_on:
-      - rocketmq-namesrv
-    networks:
-      - mall-network
+  # rocketmq-console:
+  #   image: apacherocketmq/rocketmq-dashboard:latest
+  #   container_name: mall-rocketmq-console
+  #   restart: unless-stopped
+  #   ports:
+  #     - "${ROCKETMQ_CONSOLE_PORT:-8180}:8080"
+  #   environment:
+  #     JAVA_OPTS: "-Xms256m -Xmx256m -Drocketmq.namesrv.addr=rocketmq-namesrv:9876"
+  #   depends_on:
+  #     - rocketmq-namesrv
+  #   networks:
+  #     - mall-network
 
   # Spring Boot 应用
   app:
@@ -109,14 +112,14 @@ services:
     ports:
       - "${APP_PORT:-8080}:8080"
     environment:
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+      SPRING_PROFILES_ACTIVE: dev
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-mall_system}?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
       SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-mall_user}
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-mall_pass_123456}
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
       SPRING_REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_123456}
-      ROCKETMQ_NAME-SERVER: rocketmq-namesrv:9876
+      SPRING_AUTOCONFIGURE_EXCLUDE: org.apache.rocketmq.spring.autoconfigure.RocketMQAutoConfiguration
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
       TZ: Asia/Shanghai
@@ -127,8 +130,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      rocketmq-namesrv:
-        condition: service_started
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/actuator/health"]
       interval: 30s

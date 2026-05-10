@@ -80,11 +80,13 @@ curl http://localhost:8080/api/test/hello
 | 服务 | 端口 | 说明 |
 |------|------|------|
 | app | 8080 | Spring Boot 应用 |
-| mysql | 3306 | MySQL 数据库 |
+| mysql | 3307 | MySQL 数据库（默认 3306 端口可能被占用） |
 | redis | 6379 | Redis 缓存 |
-| rocketmq-namesrv | 9876 | RocketMQ NameServer |
-| rocketmq-broker | 10911, 10909, 10912 | RocketMQ Broker |
-| rocketmq-console | 8180 | RocketMQ 控制台 |
+| rocketmq-namesrv | 9876 | RocketMQ NameServer（ARM64/Mac 已禁用） |
+| rocketmq-broker | 10911, 10909, 10912 | RocketMQ Broker（ARM64/Mac 已禁用） |
+| rocketmq-console | 8180 | RocketMQ 控制台（ARM64/Mac 已禁用） |
+
+**注意：** RocketMQ 在 Apple Silicon (ARM64) Mac 上存在兼容性问题，默认已禁用。应用使用 Mock 实现，不影响核心功能。如需使用 RocketMQ，请在 x86_64 环境下运行并取消注释 docker-compose.yml 中的 RocketMQ 相关服务。
 
 ## 常用命令
 
@@ -296,6 +298,21 @@ APP_PORT=8081
 MYSQL_PORT=3307
 REDIS_PORT=6380
 ```
+
+### RocketMQ 在 Apple Silicon/Mac 上无法启动
+
+**问题原因：**
+- RocketMQ 官方镜像仅支持 x86_64 (AMD64) 架构
+- Apple Silicon (ARM64) Mac 运行 x86_64 镜像会存在兼容性问题
+
+**解决方案：**
+1. **开发环境：** 使用 MQ Mock 实现（已默认配置），无需 RocketMQ
+2. **生产环境：** 在 x86_64 Linux 服务器上部署 RocketMQ
+
+**启用 RocketMQ（仅 x86_64 环境）：**
+1. 取消注释 `docker-compose.yml` 中的 RocketMQ 相关服务
+2. 修改 `SPRING_AUTOCONFIGURE_EXCLUDE` 环境变量，移除 RocketMQ 排除配置
+3. 重启服务：`docker-compose up -d`
 
 ## 性能优化
 

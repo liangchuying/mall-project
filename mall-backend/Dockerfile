@@ -14,8 +14,8 @@ COPY src ./src
 # 构建应用
 RUN mvn clean package -DskipTests -B
 
-# 第二阶段：运行阶段
-FROM eclipse-temurin:17-jre-alpine
+# 第二阶段：运行阶段（使用支持多架构的镜像）
+FROM amazoncorretto:17-alpine3.19
 
 # 设置时区
 RUN apk add --no-cache tzdata && \
