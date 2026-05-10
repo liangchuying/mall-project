@@ -41,6 +41,7 @@ mall-backend/
 │   │   │   ├── controller/                   # 控制器层（API 接口）
 │   │   │   │   ├── AuthController.java        # 认证控制器（注册/登录）
 │   │   │   │   ├── PasswordController.java     # 密码控制器（重置/修改）
+│   │   │   │   ├── CategoryController.java     # 商品分类控制器
 │   │   │   │   ├── TestController.java        # 测试接口
 │   │   │   │   ├── RedisController.java       # Redis 测试控制器
 │   │   │   │   └── IdempotentController.java   # 幂等性测试控制器
@@ -49,7 +50,8 @@ mall-backend/
 │   │   │   │   └── GlobalExceptionHandler.java # 全局异常处理器
 │   │   │   ├── entity/                       # 实体类包
 │   │   │   │   ├── BaseEntity.java            # 基础实体类
-│   │   │   │   └── User.java                  # 用户实体
+│   │   │   │   ├── User.java                  # 用户实体
+│   │   │   │   └── Category.java              # 商品分类实体
 │   │   │   ├── mapper/                       # 数据访问层（MyBatis Mapper）
 │   │   │   │   └── UserMapper.java           # 用户 Mapper
 │   │   │   ├── service/                      # 服务层
@@ -153,6 +155,8 @@ mall-backend/
 | `SendCodeDTO.java` | 发送验证码请求参数（手机号） |
 | `ResetPasswordDTO.java` | 重置密码请求参数（手机号/验证码/新密码） |
 | `ChangePasswordDTO.java` | 修改密码请求参数（旧密码/新密码） |
+| `CategoryCreateDTO.java` | 创建商品分类请求参数 |
+| `CategoryUpdateDTO.java` | 更新商品分类请求参数 |
 
 ### 消息队列（MQ）
 
@@ -183,12 +187,14 @@ mall-backend/
 | 文件 | 说明 |
 |------|------|
 | `LoginResponseVO.java` | 登录响应（token、用户信息） |
+| `CategoryVO.java` | 商品分类响应（包含子分类列表） |
 
 ### 数据访问层（Mapper）
 
 | 文件 | 说明 |
 |------|------|
 | `UserMapper.java` | 用户数据访问接口，继承 BaseMapper |
+| `CategoryMapper.java` | 商品分类数据访问接口，继承 BaseMapper |
 
 ### 服务层（Service）
 
@@ -196,6 +202,13 @@ mall-backend/
 |------|------|
 | `UserService.java` | 用户服务接口 |
 | `UserServiceImpl.java` | 用户服务实现类 |
+| `CategoryService.java` | 商品分类服务接口 |
+| `CategoryServiceImpl.java` | 商品分类服务实现类 |
+| `MQService.java` | 消息服务接口 |
+| `MQServiceImpl.java` | 消息服务实现（RocketMQ） |
+| `MQServiceMockImpl.java` | 消息服务 Mock 实现（无 MQ 时使用） |
+| `IdempotentService.java` | 幂等性服务接口 |
+| `IdempotentServiceImpl.java` | 幂等性服务实现 |
 
 ### 拦截器
 
@@ -439,6 +452,12 @@ http://localhost:8080/doc.html
   - [x] 发送验证码
   - [x] 通过验证码重置密码
   - [x] 修改密码
+- [x] 商品分类管理
+  - [x] 创建分类
+  - [x] 更新分类
+  - [x] 删除分类
+  - [x] 查询分类详情
+  - [x] 获取分类树（支持多级）
 - [x] 全局异常处理
 - [x] 参数校验（@Valid/@Validated）
 
@@ -587,7 +606,6 @@ Headers: Idempotent-Token: abc123...
 - [ ] 用户成长系统（等级、积分）
 
 #### 商品模块
-- [ ] 商品分类管理
 - [ ] SPU/SKU 商品管理
 - [ ] 库存管理
 - [ ] 商品检索

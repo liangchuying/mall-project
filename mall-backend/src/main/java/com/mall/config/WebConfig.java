@@ -20,6 +20,7 @@ public class WebConfig implements WebMvcConfigurer {
                         "/auth/login",
                         "/auth/register",
                         "/password/**",
+                        "/category/**",
                         "/test/**",
                         "/doc.html",
                         "/webjars/**",
