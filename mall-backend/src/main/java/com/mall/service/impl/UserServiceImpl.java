@@ -2,6 +2,7 @@ package com.mall.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mall.annotation.DistributedLock;
 import com.mall.entity.User;
 import com.mall.mapper.UserMapper;
 import com.mall.service.UserService;
@@ -114,5 +115,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         } catch (Exception e) {
             throw new RuntimeException("登出失败");
         }
+    }
+
+    @Override
+    @DistributedLock(key = "#user.id", waitTime = 5, leaseTime = 30)
+    @Transactional
+    public void updateUserWithLock(User user) {
+        baseMapper.updateById(user);
+        String cacheKey = USER_CACHE_PREFIX + user.getId();
+        redisUtil.delete(cacheKey);
+        String usernameKey = USER_CACHE_PREFIX + "username:" + user.getUsername();
+        redisUtil.delete(usernameKey);
     }
 }

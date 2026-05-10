@@ -28,6 +28,12 @@ public class GlobalExceptionHandler {
         return Result.error(429, e.getMessage());
     }
 
+    @ExceptionHandler(DistributedLockException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public Result<?> handleDistributedLock(DistributedLockException e) {
+        return Result.error(409, e.getMessage());
+    }
+
     @ExceptionHandler({MethodArgumentNotValidException.class, BindException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<?> handleValidException(Exception e) {

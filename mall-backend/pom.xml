@@ -23,6 +23,7 @@
         <mybatis-plus.version>3.5.14</mybatis-plus.version>
         <jwt.version>0.12.3</jwt.version>
         <knife4j.version>4.4.0</knife4j.version>
+        <redisson.version>3.25.0</redisson.version>
     </properties>
 
     <dependencies>
@@ -114,6 +115,13 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-pool2</artifactId>
+        </dependency>
+
+        <!-- Redisson 分布式锁 -->
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson-spring-boot-starter</artifactId>
+            <version>${redisson.version}</version>
         </dependency>
 
         <!-- Jackson 日期时间支持 -->

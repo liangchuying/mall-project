@@ -13,4 +13,6 @@ public interface UserService {
     User getUserByUsername(String username);
 
     void logout(String token);
+
+    void updateUserWithLock(User user);
 }
