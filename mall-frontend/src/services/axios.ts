@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError, InternalAxiosRequestConfig } from 'axios';
+import axios from 'axios';
 
 // 基础配置
 const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
@@ -7,14 +7,26 @@ const TIMEOUT = 10000;
 // 请求取消映射
 const pendingRequests = new Map<string, AbortController>();
 
+// 定义内部请求配置类型
+interface InternalRequestConfig {
+  url?: string;
+  method?: string;
+  baseURL?: string;
+  headers?: any;
+  params?: any;
+  data?: any;
+  timeout?: number;
+  signal?: AbortSignal;
+}
+
 // 生成请求唯一key
-const generateRequestKey = (config: InternalAxiosRequestConfig): string => {
+const generateRequestKey = (config: InternalRequestConfig): string => {
   const { method, url, data, params } = config;
   return [method, url, JSON.stringify(data), JSON.stringify(params)].join('&');
 };
 
 // 创建 axios 实例
-const axiosInstance: AxiosInstance = axios.create({
+const axiosInstance = axios.create({
   baseURL,
   timeout: TIMEOUT,
   headers: {
@@ -25,7 +37,7 @@ const axiosInstance: AxiosInstance = axios.create({
 // 请求拦截器
 axiosInstance.interceptors.request.use(
   (config) => {
-    const requestKey = generateRequestKey(config);
+    const requestKey = generateRequestKey(config as InternalRequestConfig);
 
     // 取消重复请求
     if (pendingRequests.has(requestKey)) {
@@ -61,17 +73,17 @@ axiosInstance.interceptors.request.use(
 
 // 响应拦截器
 axiosInstance.interceptors.response.use(
-  (response: AxiosResponse) => {
+  (response: any) => {
     // 请求完成后移除 pending 记录
-    const requestKey = generateRequestKey(response.config as InternalAxiosRequestConfig);
+    const requestKey = generateRequestKey(response.config as InternalRequestConfig);
     pendingRequests.delete(requestKey);
 
     return response;
   },
-  async (error: AxiosError) => {
+  async (error: any) => {
     // 请求失败后移除 pending 记录
     if (error.config) {
-      const requestKey = generateRequestKey(error.config as InternalAxiosRequestConfig);
+      const requestKey = generateRequestKey(error.config as InternalRequestConfig);
       pendingRequests.delete(requestKey);
     }
 
@@ -151,6 +163,3 @@ export const cancelAllRequests = () => {
 
 // 导出 axios 实例
 export default axiosInstance;
-
-// 导出类型
-export type { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError };

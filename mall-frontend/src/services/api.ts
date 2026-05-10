@@ -1,4 +1,4 @@
-import axiosInstance, { AxiosRequestConfig, AxiosResponse } from './axios';
+import axiosInstance from './axios';
 import type { ApiResponse } from '../types';
 
 /**
@@ -6,7 +6,7 @@ import type { ApiResponse } from '../types';
  * @param response axios 响应对象
  * @returns 处理后的数据
  */
-const handleResponse = <T>(response: AxiosResponse<ApiResponse<T>>): T => {
+const handleResponse = <T>(response: any): T => {
   const { data } = response;
 
   if (data.code === 200 || data.code === 0) {
@@ -24,7 +24,7 @@ const handleResponse = <T>(response: AxiosResponse<ApiResponse<T>>): T => {
  */
 export const get = <T = any>(
   url: string,
-  config?: AxiosRequestConfig
+  config?: any
 ): Promise<T> => {
   return axiosInstance.get<ApiResponse<T>>(url, config).then(handleResponse);
 };
@@ -39,7 +39,7 @@ export const get = <T = any>(
 export const post = <T = any>(
   url: string,
   data?: any,
-  config?: AxiosRequestConfig
+  config?: any
 ): Promise<T> => {
   return axiosInstance.post<ApiResponse<T>>(url, data, config).then(handleResponse);
 };
@@ -54,7 +54,7 @@ export const post = <T = any>(
 export const put = <T = any>(
   url: string,
   data?: any,
-  config?: AxiosRequestConfig
+  config?: any
 ): Promise<T> => {
   return axiosInstance.put<ApiResponse<T>>(url, data, config).then(handleResponse);
 };
@@ -67,7 +67,7 @@ export const put = <T = any>(
  */
 export const del = <T = any>(
   url: string,
-  config?: AxiosRequestConfig
+  config?: any
 ): Promise<T> => {
   return axiosInstance.delete<ApiResponse<T>>(url, config).then(handleResponse);
 };
@@ -82,7 +82,7 @@ export const del = <T = any>(
 export const patch = <T = any>(
   url: string,
   data?: any,
-  config?: AxiosRequestConfig
+  config?: any
 ): Promise<T> => {
   return axiosInstance.patch<ApiResponse<T>>(url, data, config).then(handleResponse);
 };
@@ -97,7 +97,7 @@ export const patch = <T = any>(
 export const upload = <T = any>(
   url: string,
   file: File,
-  config?: AxiosRequestConfig
+  config?: any
 ): Promise<T> => {
   const formData = new FormData();
   formData.append('file', file);
@@ -120,7 +120,7 @@ export const upload = <T = any>(
 export const uploadMultiple = <T = any>(
   url: string,
   files: File[],
-  config?: AxiosRequestConfig
+  config?: any
 ): Promise<T> => {
   const formData = new FormData();
   files.forEach((file) => {
@@ -144,7 +144,7 @@ export const uploadMultiple = <T = any>(
 export const download = (
   url: string,
   filename?: string,
-  config?: AxiosRequestConfig
+  config?: any
 ): void => {
   axiosInstance
     .get(url, {

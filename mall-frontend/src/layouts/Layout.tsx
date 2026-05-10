@@ -1,4 +1,6 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
+import { useState } from 'react';
+import { AuthModal } from '../components/AuthModal';
 
 const navLinks = [
   { path: '/', label: '首页' },
@@ -10,6 +12,7 @@ const navLinks = [
 export default function Layout() {
   const location = useLocation();
   const isHomePage = location.pathname === '/';
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -52,12 +55,12 @@ export default function Layout() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
               </Link>
-              <Link
-                to="/login"
+              <button
+                onClick={() => setIsAuthModalOpen(true)}
                 className="px-5 py-2 bg-primary-400 text-white rounded-lg text-sm font-semibold hover:bg-primary-600 transition-colors"
               >
                 登录
-              </Link>
+              </button>
             </div>
           </div>
         </div>
@@ -76,6 +79,16 @@ export default function Layout() {
           </p>
         </div>
       </footer>
+
+      {/* 认证弹窗 */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onSuccess={() => {
+          console.log('认证成功！');
+          setIsAuthModalOpen(false);
+        }}
+      />
     </div>
   );
 }
