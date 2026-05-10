@@ -13,6 +13,10 @@ public class RedisUtil {
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
+    public RedisTemplate<String, Object> redisTemplate() {
+        return redisTemplate;
+    }
+
     public void set(String key, Object value) {
         redisTemplate.opsForValue().set(key, value);
     }

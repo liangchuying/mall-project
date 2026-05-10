@@ -8,9 +8,10 @@
 |------|------|------|
 | Spring Boot | 3.1.8 | 基础框架 |
 | MySQL | 8.x | 关系型数据库 |
-| Redis | - | 缓存 |
+| Redis | - | 缓存、限流 |
 | MyBatis-Plus | 3.5.14 | ORM 框架 |
 | Spring Security | - | 安全框架 |
+| Spring AOP | - | 面向切面编程（限流切面） |
 | JWT | 0.12.3 | 身份认证 |
 | Knife4j | 4.4.0 | 接口文档 |
 | Hutool | 5.8.25 | 工具类库 |
@@ -341,6 +342,8 @@ http://localhost:8080/doc.html
 - [x] Redis 缓存集成
   - [x] 用户信息缓存（减少数据库查询）
   - [x] Token 黑名单（登出失效）
+  - [x] 接口限流（防刷）
+- [x] Spring AOP 切面（限流拦截）
 - [x] MyBatis-Plus 配置（分页、逻辑删除、自动填充）
 - [x] 统一响应结果封装
 - [x] 跨域配置
@@ -379,10 +382,18 @@ http://localhost:8080/doc.html
 - 黑名单中的 Token 在过期前无法使用
 - 自动根据 Token 过期时间设置黑名单过期时间
 
+**接口限流**
+- 基于 IP + 接口路径进行限流
+- 使用 Redis 计数器实现分布式限流
+- 登录接口：60 秒内最多 10 次请求
+- 注册接口：60 秒内最多 5 次请求
+- 超过限制返回 429 状态码
+
 **缓存 Key 规则**
 - 用户信息: `user:{userId}`
 - 用户名查询: `user:username:{username}`
 - Token 黑名单: `token:blacklist:{token}`
+- 接口限流: `rate_limit:{ip}:{uri}`
 
 ## 后续开发
 
@@ -444,7 +455,7 @@ http://localhost:8080/doc.html
 - [x] 已添加全局异常处理
 - [x] 已添加参数校验（@Valid/@Validated）
 - [x] 已集成 Redis 缓存
-- [ ] 建议添加接口限流和防刷
+- [x] 已添加接口限流和防刷
 - [ ] 建议添加分布式锁
 - [ ] 建议添加消息队列（RabbitMQ/RocketMQ）
 - [ ] 建议添加接口幂等性处理

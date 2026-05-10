@@ -1,5 +1,6 @@
 package com.mall.controller;
 
+import com.mall.annotation.RateLimiter;
 import com.mall.dto.LoginDTO;
 import com.mall.dto.RegisterDTO;
 import com.mall.entity.User;
@@ -26,6 +27,7 @@ public class AuthController {
     private JwtUtil jwtUtil;
 
     @Operation(summary = "用户注册", description = "新用户注册，需要提供用户名、密码、昵称、手机号等信息")
+    @RateLimiter(count = 5, time = 60, message = "注册请求过于频繁，请稍后再试")
     @PostMapping("/register")
     public Result<Void> register(@Valid @RequestBody RegisterDTO dto) {
         User user = new User();
@@ -39,6 +41,7 @@ public class AuthController {
     }
 
     @Operation(summary = "用户登录", description = "使用用户名和密码登录，成功后返回 JWT Token")
+    @RateLimiter(count = 10, time = 60, message = "登录请求过于频繁，请稍后再试")
     @PostMapping("/login")
     public Result<LoginResponseVO> login(@Valid @RequestBody LoginDTO dto) {
         String token = userService.login(dto.getUsername(), dto.getPassword());
