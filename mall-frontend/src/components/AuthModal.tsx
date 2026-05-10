@@ -4,8 +4,6 @@ import { Button } from './Button';
 import { Input } from './Input';
 import { login, register } from '../services/modules/auth';
 
-type AuthTab = 'login' | 'register' | 'forgot';
-
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -13,49 +11,34 @@ interface AuthModalProps {
 }
 
 export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
-  const [activeTab, setActiveTab] = useState<AuthTab>('login');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [mode, setMode] = useState<'login' | 'register'>('login');
 
-  // 登录表单状态
-  const [loginForm, setLoginForm] = useState({
-    username: '',
-    password: '',
-  });
-  const [loginErrors, setLoginErrors] = useState<{
-    username?: string;
-    password?: string;
-  }>({});
-
-  // 注册表单状态
-  const [registerForm, setRegisterForm] = useState({
+  // 统一表单状态
+  const [form, setForm] = useState({
     username: '',
     password: '',
     nickname: '',
     phone: '',
     email: '',
+    code: '',
   });
-  const [registerErrors, setRegisterErrors] = useState<{
+
+  // 表单验证错误
+  const [formErrors, setFormErrors] = useState<{
     username?: string;
     password?: string;
     nickname?: string;
     phone?: string;
     email?: string;
+    code?: string;
   }>({});
 
-  // 忘记密码表单状态
-  const [forgotForm, setForgotForm] = useState({
-    phone: '',
-    code: '',
-    newPassword: '',
-  });
-  const [forgotErrors, setForgotErrors] = useState<{
-    phone?: string;
-    code?: string;
-    newPassword?: string;
-  }>({});
+  // 验证码相关
   const [codeSent, setCodeSent] = useState(false);
   const [countdown, setCountdown] = useState(0);
+  const [resetMode, setResetMode] = useState(false);
 
   // 验证用户名
   const validateUsername = (value: string) => {
@@ -108,23 +91,16 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
     e.preventDefault();
     setError('');
 
-    // 验证
-    const usernameError = validateUsername(loginForm.username);
-    const passwordError = validatePassword(loginForm.password);
+    const usernameError = validateUsername(form.username);
+    const passwordError = validatePassword(form.password);
 
-    setLoginErrors({
-      username: usernameError,
-      password: passwordError,
-    });
+    setFormErrors({ username: usernameError, password: passwordError });
 
     if (usernameError || passwordError) return;
 
     setIsLoading(true);
     try {
-      await login({
-        username: loginForm.username,
-        password: loginForm.password,
-      });
+      await login({ username: form.username, password: form.password });
       onSuccess?.();
       onClose();
     } catch (err: any) {
@@ -139,14 +115,13 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
     e.preventDefault();
     setError('');
 
-    // 验证
-    const usernameError = validateUsername(registerForm.username);
-    const passwordError = validatePassword(registerForm.password);
-    const nicknameError = validateNickname(registerForm.nickname);
-    const phoneError = validatePhone(registerForm.phone);
-    const emailError = validateEmail(registerForm.email);
+    const usernameError = validateUsername(form.username);
+    const passwordError = validatePassword(form.password);
+    const nicknameError = validateNickname(form.nickname);
+    const phoneError = validatePhone(form.phone);
+    const emailError = validateEmail(form.email);
 
-    setRegisterErrors({
+    setFormErrors({
       username: usernameError,
       password: passwordError,
       nickname: nicknameError,
@@ -159,11 +134,11 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
     setIsLoading(true);
     try {
       await register({
-        username: registerForm.username,
-        password: registerForm.password,
-        nickname: registerForm.nickname,
-        phone: registerForm.phone,
-        email: registerForm.email,
+        username: form.username,
+        password: form.password,
+        nickname: form.nickname,
+        phone: form.phone,
+        email: form.email,
       });
       onSuccess?.();
       onClose();
@@ -176,8 +151,8 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
 
   // 处理发送验证码
   const handleSendCode = async () => {
-    const phoneError = validatePhone(forgotForm.phone);
-    setForgotErrors({ phone: phoneError });
+    const phoneError = validatePhone(form.phone);
+    setFormErrors({ phone: phoneError });
 
     if (phoneError) return;
 
@@ -205,15 +180,14 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
     e.preventDefault();
     setError('');
 
-    // 验证
-    const phoneError = validatePhone(forgotForm.phone);
-    const codeError = validateCode(forgotForm.code);
-    const passwordError = validatePassword(forgotForm.newPassword);
+    const phoneError = validatePhone(form.phone);
+    const codeError = validateCode(form.code);
+    const passwordError = validatePassword(form.password);
 
-    setForgotErrors({
+    setFormErrors({
       phone: phoneError,
       code: codeError,
-      newPassword: passwordError,
+      password: passwordError,
     });
 
     if (phoneError || codeError || passwordError) return;
@@ -221,7 +195,7 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
     setIsLoading(true);
     try {
       // TODO: 调用重置密码 API
-      setActiveTab('login');
+      setResetMode(false);
       setError('');
     } catch (err: any) {
       setError('重置密码失败，请重试');
@@ -232,30 +206,11 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="glass-card">
-      {/* Header Tabs */}
-      <div className="border-b border-gray-200">
-        <div className="flex">
-          {(['login', 'register', 'forgot'] as AuthTab[]).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => {
-                setActiveTab(tab);
-                setError('');
-              }}
-              className={`flex-1 border-b-2 px-6 py-4 text-sm font-semibold transition-colors
-                ${
-                  activeTab === tab
-                    ? 'border-primary-400 text-primary-500'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }
-              `}
-            >
-              {tab === 'login' && '登录'}
-              {tab === 'register' && '注册'}
-              {tab === 'forgot' && '忘记密码'}
-            </button>
-          ))}
-        </div>
+      {/* Header */}
+      <div className="border-b border-gray-200 px-8 py-4">
+        <h2 className="text-xl font-semibold text-gray-900">
+          {resetMode ? '重置密码' : (mode === 'login' ? '登录' : '注册')}
+        </h2>
       </div>
 
       {/* Content */}
@@ -266,300 +221,189 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
           </div>
         )}
 
-        {activeTab === 'login' && (
-          <form onSubmit={handleLogin} className="space-y-5">
-            <Input
-              id="login-username"
-              label="用户名"
-              type="text"
-              placeholder="请输入用户名"
-              value={loginForm.username}
-              onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })}
-              onBlur={() =>
-                setLoginErrors({
-                  ...loginErrors,
-                  username: validateUsername(loginForm.username),
-                })
-              }
-              error={loginErrors.username}
-              autoComplete="username"
-              required
-            />
+        <form onSubmit={resetMode ? handleResetPassword : (mode === 'login' ? handleLogin : handleRegister)} className="space-y-5">
+          {resetMode ? (
+            <>
+              <Input
+                id="reset-phone"
+                label="手机号"
+                type="tel"
+                placeholder="请输入手机号"
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                onBlur={() => setFormErrors({ ...formErrors, phone: validatePhone(form.phone) })}
+                error={formErrors.phone}
+                autoComplete="tel"
+                required
+              />
 
-            <Input
-              id="login-password"
-              label="密码"
-              type="password"
-              placeholder="请输入密码"
-              value={loginForm.password}
-              onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-              onBlur={() =>
-                setLoginErrors({
-                  ...loginErrors,
-                  password: validatePassword(loginForm.password),
-                })
-              }
-              error={loginErrors.password}
-              helperText="密码至少6个字符"
-              autoComplete="current-password"
-              required
-            />
-
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-gray-300 text-primary-400 focus:ring-primary-400"
-                />
-                <span className="text-sm text-gray-600">记住我</span>
-              </label>
-              <button
-                type="button"
-                onClick={() => setActiveTab('forgot')}
-                className="text-sm text-primary-400 hover:text-primary-600 transition-colors"
-              >
-                忘记密码？
-              </button>
-            </div>
-
-            <Button
-              type="submit"
-              variant="primary"
-              size="lg"
-              className="w-full"
-              isLoading={isLoading}
-            >
-              登录
-            </Button>
-          </form>
-        )}
-
-        {activeTab === 'register' && (
-          <form onSubmit={handleRegister} className="space-y-5">
-            <Input
-              id="register-username"
-              label="用户名"
-              type="text"
-              placeholder="请输入用户名"
-              value={registerForm.username}
-              onChange={(e) =>
-                setRegisterForm({ ...registerForm, username: e.target.value })
-              }
-              onBlur={() =>
-                setRegisterErrors({
-                  ...registerErrors,
-                  username: validateUsername(registerForm.username),
-                })
-              }
-              error={registerErrors.username}
-              helperText="用户名只能包含字母、数字和下划线"
-              autoComplete="username"
-              required
-            />
-
-            <Input
-              id="register-password"
-              label="密码"
-              type="password"
-              placeholder="请输入密码"
-              value={registerForm.password}
-              onChange={(e) =>
-                setRegisterForm({ ...registerForm, password: e.target.value })
-              }
-              onBlur={() =>
-                setRegisterErrors({
-                  ...registerErrors,
-                  password: validatePassword(registerForm.password),
-                })
-              }
-              error={registerErrors.password}
-              helperText="密码至少6个字符"
-              autoComplete="new-password"
-              required
-            />
-
-            <Input
-              id="register-nickname"
-              label="昵称"
-              type="text"
-              placeholder="请输入昵称"
-              value={registerForm.nickname}
-              onChange={(e) =>
-                setRegisterForm({ ...registerForm, nickname: e.target.value })
-              }
-              onBlur={() =>
-                setRegisterErrors({
-                  ...registerErrors,
-                  nickname: validateNickname(registerForm.nickname),
-                })
-              }
-              error={registerErrors.nickname}
-              autoComplete="nickname"
-              required
-            />
-
-            <Input
-              id="register-phone"
-              label="手机号"
-              type="tel"
-              placeholder="请输入手机号"
-              value={registerForm.phone}
-              onChange={(e) =>
-                setRegisterForm({ ...registerForm, phone: e.target.value })
-              }
-              onBlur={() =>
-                setRegisterErrors({
-                  ...registerErrors,
-                  phone: validatePhone(registerForm.phone),
-                })
-              }
-              error={registerErrors.phone}
-              autoComplete="tel"
-              required
-            />
-
-            <Input
-              id="register-email"
-              label="邮箱（选填）"
-              type="email"
-              placeholder="请输入邮箱"
-              value={registerForm.email}
-              onChange={(e) =>
-                setRegisterForm({ ...registerForm, email: e.target.value })
-              }
-              onBlur={() =>
-                setRegisterErrors({
-                  ...registerErrors,
-                  email: validateEmail(registerForm.email),
-                })
-              }
-              error={registerErrors.email}
-              autoComplete="email"
-            />
-
-            <Button
-              type="submit"
-              variant="primary"
-              size="lg"
-              className="w-full"
-              isLoading={isLoading}
-            >
-              注册
-            </Button>
-          </form>
-        )}
-
-        {activeTab === 'forgot' && (
-          <form onSubmit={handleResetPassword} className="space-y-5">
-            <Input
-              id="forgot-phone"
-              label="手机号"
-              type="tel"
-              placeholder="请输入手机号"
-              value={forgotForm.phone}
-              onChange={(e) =>
-                setForgotForm({ ...forgotForm, phone: e.target.value })
-              }
-              onBlur={() =>
-                setForgotErrors({
-                  ...forgotErrors,
-                  phone: validatePhone(forgotForm.phone),
-                })
-              }
-              error={forgotErrors.phone}
-              autoComplete="tel"
-              required
-            />
-
-            <div className="space-y-2">
-              <label htmlFor="forgot-code" className="block text-sm font-medium text-gray-700">
-                验证码
-              </label>
-              <div className="flex gap-3">
-                <Input
-                  id="forgot-code"
-                  type="text"
-                  placeholder="请输入验证码"
-                  value={forgotForm.code}
-                  onChange={(e) =>
-                    setForgotForm({ ...forgotForm, code: e.target.value })
-                  }
-                  onBlur={() =>
-                    setForgotErrors({
-                      ...forgotErrors,
-                      code: validateCode(forgotForm.code),
-                    })
-                  }
-                  error={forgotErrors.code}
-                  maxLength={6}
-                  required
-                />
-                <Button
-                  type="button"
-                  variant={codeSent ? 'secondary' : 'primary'}
-                  disabled={codeSent || countdown > 0}
-                  onClick={handleSendCode}
-                  className="whitespace-nowrap px-4"
-                >
-                  {countdown > 0 ? `${countdown}秒` : codeSent ? '已发送' : '发送验证码'}
-                </Button>
+              <div className="space-y-2">
+                <label htmlFor="reset-code" className="block text-sm font-medium text-gray-700">
+                  验证码
+                </label>
+                <div className="flex gap-3">
+                  <Input
+                    id="reset-code"
+                    type="text"
+                    placeholder="请输入验证码"
+                    value={form.code}
+                    onChange={(e) => setForm({ ...form, code: e.target.value })}
+                    onBlur={() => setFormErrors({ ...formErrors, code: validateCode(form.code) })}
+                    error={formErrors.code}
+                    maxLength={6}
+                    required
+                  />
+                  <Button
+                    type="button"
+                    variant={codeSent ? 'secondary' : 'primary'}
+                    disabled={codeSent || countdown > 0}
+                    onClick={handleSendCode}
+                    className="whitespace-nowrap px-4"
+                  >
+                    {countdown > 0 ? `${countdown}秒` : codeSent ? '已发送' : '发送验证码'}
+                  </Button>
+                </div>
               </div>
-            </div>
 
-            <Input
-              id="forgot-password"
-              label="新密码"
-              type="password"
-              placeholder="请输入新密码"
-              value={forgotForm.newPassword}
-              onChange={(e) =>
-                setForgotForm({ ...forgotForm, newPassword: e.target.value })
-              }
-              onBlur={() =>
-                setForgotErrors({
-                  ...forgotErrors,
-                  newPassword: validatePassword(forgotForm.newPassword),
-                })
-              }
-              error={forgotErrors.newPassword}
-              helperText="密码至少6个字符"
-              autoComplete="new-password"
-              required
-            />
+              <Input
+                id="reset-password"
+                label="新密码"
+                type="password"
+                placeholder="请输入新密码"
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                onBlur={() => setFormErrors({ ...formErrors, password: validatePassword(form.password) })}
+                error={formErrors.password}
+                helperText="密码至少6个字符"
+                autoComplete="new-password"
+                required
+              />
 
-            <Button
-              type="submit"
-              variant="primary"
-              size="lg"
-              className="w-full"
-              isLoading={isLoading}
-            >
-              重置密码
-            </Button>
-
-            <div className="text-center">
-              <button
-                type="button"
-                onClick={() => setActiveTab('login')}
-                className="text-sm text-primary-400 hover:text-primary-600 transition-colors"
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                className="w-full"
+                isLoading={isLoading}
               >
-                返回登录
-              </button>
-            </div>
-          </form>
-        )}
+                重置密码
+              </Button>
+            </>
+          ) : (
+            <>
+              <Input
+                id="username"
+                label="用户名"
+                type="text"
+                placeholder="请输入用户名"
+                value={form.username}
+                onChange={(e) => setForm({ ...form, username: e.target.value })}
+                onBlur={() => setFormErrors({ ...formErrors, username: validateUsername(form.username) })}
+                error={formErrors.username}
+                helperText={mode === 'register' ? '用户名只能包含字母、数字和下划线' : ''}
+                autoComplete="username"
+                required
+              />
+
+              <Input
+                id="password"
+                label="密码"
+                type="password"
+                placeholder="请输入密码"
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                onBlur={() => setFormErrors({ ...formErrors, password: validatePassword(form.password) })}
+                error={formErrors.password}
+                helperText="密码至少6个字符"
+                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                required
+              />
+
+              {mode === 'register' && (
+                <>
+                  <Input
+                    id="nickname"
+                    label="昵称"
+                    type="text"
+                    placeholder="请输入昵称"
+                    value={form.nickname}
+                    onChange={(e) => setForm({ ...form, nickname: e.target.value })}
+                    onBlur={() => setFormErrors({ ...formErrors, nickname: validateNickname(form.nickname) })}
+                    error={formErrors.nickname}
+                    autoComplete="nickname"
+                    required
+                  />
+
+                  <Input
+                    id="phone"
+                    label="手机号"
+                    type="tel"
+                    placeholder="请输入手机号"
+                    value={form.phone}
+                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                    onBlur={() => setFormErrors({ ...formErrors, phone: validatePhone(form.phone) })}
+                    error={formErrors.phone}
+                    autoComplete="tel"
+                    required
+                  />
+
+                  <Input
+                    id="email"
+                    label="邮箱（选填）"
+                    type="email"
+                    placeholder="请输入邮箱"
+                    value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    onBlur={() => setFormErrors({ ...formErrors, email: validateEmail(form.email) })}
+                    error={formErrors.email}
+                    autoComplete="email"
+                  />
+                </>
+              )}
+
+              {mode === 'login' && (
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 rounded border-gray-300 text-primary-400 focus:ring-primary-400"
+                    />
+                    <span className="text-sm text-gray-600">记住我</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setResetMode(true)}
+                    className="text-sm text-primary-400 hover:text-primary-600 transition-colors"
+                  >
+                    忘记密码？
+                  </button>
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                className="w-full"
+                isLoading={isLoading}
+              >
+                {mode === 'login' ? '登录' : '注册'}
+              </Button>
+            </>
+          )}
+        </form>
       </div>
 
       {/* Footer */}
-      {activeTab !== 'forgot' && (
+      {!resetMode && (
         <div className="border-t border-gray-200 px-8 py-4">
           <p className="text-center text-sm text-gray-600">
-            {activeTab === 'login' ? (
+            {mode === 'login' ? (
               <>
                 还没有账号？{' '}
                 <button
                   type="button"
-                  onClick={() => setActiveTab('register')}
+                  onClick={() => setMode('register')}
                   className="font-semibold text-primary-400 hover:text-primary-600 transition-colors"
                 >
                   立即注册
@@ -570,7 +414,7 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
                 已有账号？{' '}
                 <button
                   type="button"
-                  onClick={() => setActiveTab('login')}
+                  onClick={() => setMode('login')}
                   className="font-semibold text-primary-400 hover:text-primary-600 transition-colors"
                 >
                   立即登录
@@ -578,6 +422,18 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
               </>
             )}
           </p>
+        </div>
+      )}
+
+      {resetMode && (
+        <div className="px-8 py-4">
+          <button
+            type="button"
+            onClick={() => setResetMode(false)}
+            className="w-full text-sm text-center text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            返回登录
+          </button>
         </div>
       )}
     </Modal>
