@@ -8,6 +8,7 @@
 |------|------|------|
 | Spring Boot | 3.1.8 | 基础框架 |
 | MySQL | 8.x | 关系型数据库 |
+| Redis | - | 缓存 |
 | MyBatis-Plus | 3.5.14 | ORM 框架 |
 | Spring Security | - | 安全框架 |
 | JWT | 0.12.3 | 身份认证 |
@@ -36,7 +37,11 @@ mall-backend/
 │   │   │   │   └── WebConfig.java             # Web 配置
 │   │   │   ├── controller/                   # 控制器层（API 接口）
 │   │   │   │   ├── AuthController.java        # 认证控制器（注册/登录）
-│   │   │   │   └── TestController.java        # 测试接口
+│   │   │   │   ├── TestController.java        # 测试接口
+│   │   │   │   └── RedisController.java       # Redis 测试控制器
+│   │   │   ├── exception/                    # 异常处理
+│   │   │   │   ├── BusinessException.java     # 自定义业务异常
+│   │   │   │   └── GlobalExceptionHandler.java # 全局异常处理器
 │   │   │   ├── entity/                       # 实体类包
 │   │   │   │   ├── BaseEntity.java            # 基础实体类
 │   │   │   │   └── User.java                  # 用户实体
@@ -97,6 +102,8 @@ mall-backend/
 | `MyMetaObjectHandler.java` | 实现 `MetaObjectHandler`，自动填充创建时间和更新时间 |
 | `SecurityConfig.java` | Spring Security 安全配置，配置认证规则和过滤器 |
 | `WebConfig.java` | Web 配置，注册拦截器等 |
+| `RedisConfig.java` | Redis 配置类，配置序列化和缓存管理器 |
+| `RedisProperties.java` | Redis 配置属性类 |
 
 ### 工具类
 
@@ -104,6 +111,14 @@ mall-backend/
 |------|------|
 | `Result.java` | 统一返回格式 `Result<T>`，包含 code、message、data 字段 |
 | `JwtUtil.java` | 提供 JWT 生成、解析、过期判断等方法 |
+| `RedisUtil.java` | Redis 操作工具类，封装常用的 Redis 操作 |
+
+### 异常处理
+
+| 文件 | 说明 |
+|------|------|
+| `BusinessException.java` | 自定义业务异常类 |
+| `GlobalExceptionHandler.java` | 全局异常处理器，统一处理各类异常 |
 
 ### 数据传输对象（DTO）
 
@@ -296,6 +311,8 @@ mvn spring-boot:run
     "password": "password123"
   }
   ```
+- **登出**: `POST /api/auth/logout` (需携带 JWT Token)
+- **获取用户信息**: `GET /api/auth/info` (需携带 JWT Token)
 
 #### 接口文档
 项目已集成 Knife4j 接口文档，启动后访问：
@@ -321,11 +338,17 @@ http://localhost:8080/doc.html
 - [x] 基础框架配置
 - [x] Spring Security 安全配置
 - [x] JWT 身份认证
+- [x] Redis 缓存集成
+  - [x] 用户信息缓存（减少数据库查询）
+  - [x] Token 黑名单（登出失效）
 - [x] MyBatis-Plus 配置（分页、逻辑删除、自动填充）
 - [x] 统一响应结果封装
 - [x] 跨域配置
 - [x] Knife4j 接口文档
 - [x] 用户注册/登录接口
+- [x] 用户登出接口
+- [x] 全局异常处理
+- [x] 参数校验（@Valid/@Validated）
 
 ## 配置说明
 
@@ -344,6 +367,22 @@ http://localhost:8080/doc.html
 
 - **端口**：8080
 - **上下文路径**：`/api`
+
+### Redis 缓存应用
+
+**用户信息缓存**
+- 缓存用户信息 30 分钟，减少数据库查询
+- 支持按用户 ID 和用户名两种方式查询
+
+**Token 黑名单**
+- 用户登出时将 Token 加入 Redis 黑名单
+- 黑名单中的 Token 在过期前无法使用
+- 自动根据 Token 过期时间设置黑名单过期时间
+
+**缓存 Key 规则**
+- 用户信息: `user:{userId}`
+- 用户名查询: `user:username:{username}`
+- Token 黑名单: `token:blacklist:{token}`
 
 ## 后续开发
 
@@ -402,9 +441,9 @@ http://localhost:8080/doc.html
 - [x] 生产环境请修改 JWT 密钥
 - [x] 已添加日志配置（Logback）
 - [x] 已添加接口文档（Knife4j）
-- [ ] 建议添加全局异常处理
-- [ ] 建议集成 Redis 缓存
-- [ ] 建议添加参数校验（@Validated）
+- [x] 已添加全局异常处理
+- [x] 已添加参数校验（@Valid/@Validated）
+- [x] 已集成 Redis 缓存
 - [ ] 建议添加接口限流和防刷
 - [ ] 建议添加分布式锁
 - [ ] 建议添加消息队列（RabbitMQ/RocketMQ）

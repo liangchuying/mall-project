@@ -6,10 +6,13 @@ import com.mall.entity.User;
 import com.mall.mapper.UserMapper;
 import com.mall.service.UserService;
 import com.mall.utils.JwtUtil;
+import com.mall.utils.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
@@ -18,6 +21,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Autowired
+    private RedisUtil redisUtil;
+
+    private static final String USER_CACHE_PREFIX = "user:";
+    private static final long USER_CACHE_EXPIRE = 30;
+    private static final String TOKEN_BLACKLIST_PREFIX = "token:blacklist:";
 
     @Override
     @Transactional
@@ -62,13 +72,47 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public User getUserById(Long userId) {
-        return baseMapper.selectById(userId);
+        String cacheKey = USER_CACHE_PREFIX + userId;
+        User cachedUser = (User) redisUtil.get(cacheKey);
+        if (cachedUser != null) {
+            return cachedUser;
+        }
+        User user = baseMapper.selectById(userId);
+        if (user != null) {
+            user.setPassword(null);
+            redisUtil.set(cacheKey, user, USER_CACHE_EXPIRE, TimeUnit.MINUTES);
+        }
+        return user;
     }
 
     @Override
     public User getUserByUsername(String username) {
+        String cacheKey = USER_CACHE_PREFIX + "username:" + username;
+        User cachedUser = (User) redisUtil.get(cacheKey);
+        if (cachedUser != null) {
+            return cachedUser;
+        }
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(User::getUsername, username);
-        return baseMapper.selectOne(wrapper);
+        User user = baseMapper.selectOne(wrapper);
+        if (user != null) {
+            String userIdKey = USER_CACHE_PREFIX + user.getId();
+            redisUtil.set(cacheKey, user, USER_CACHE_EXPIRE, TimeUnit.MINUTES);
+            redisUtil.set(userIdKey, user, USER_CACHE_EXPIRE, TimeUnit.MINUTES);
+        }
+        return user;
+    }
+
+    @Override
+    public void logout(String token) {
+        try {
+            Long expireTime = jwtUtil.getExpirationTime(token) - System.currentTimeMillis();
+            if (expireTime > 0) {
+                String blacklistKey = TOKEN_BLACKLIST_PREFIX + token;
+                redisUtil.set(blacklistKey, "1", expireTime, TimeUnit.MILLISECONDS);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("登出失败");
+        }
     }
 }

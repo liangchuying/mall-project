@@ -56,4 +56,12 @@ public class AuthController {
         user.setPassword(null);
         return Result.success(user);
     }
+
+    @Operation(summary = "用户登出", description = "用户登出，将 token 加入黑名单")
+    @PostMapping("/logout")
+    public Result<Void> logout(@Parameter(description = "JWT Token，格式：Bearer {token}", required = true) @RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.replace("Bearer ", "");
+        userService.logout(token);
+        return Result.success();
+    }
 }

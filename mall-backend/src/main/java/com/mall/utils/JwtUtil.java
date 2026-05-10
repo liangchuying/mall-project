@@ -65,4 +65,9 @@ public class JwtUtil {
             return true;
         }
     }
+
+    public Long getExpirationTime(String token) {
+        Claims claims = parseToken(token);
+        return claims.getExpiration().getTime();
+    }
 }
