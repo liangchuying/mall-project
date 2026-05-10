@@ -25,6 +25,10 @@ public class RedisUtil {
         redisTemplate.opsForValue().set(key, value, time, unit);
     }
 
+    public Boolean setIfAbsent(String key, Object value, long time, TimeUnit unit) {
+        return redisTemplate.opsForValue().setIfAbsent(key, value, time, unit);
+    }
+
     public Object get(String key) {
         return redisTemplate.opsForValue().get(key);
     }

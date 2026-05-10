@@ -41,7 +41,8 @@ mall-backend/
 │   │   │   ├── controller/                   # 控制器层（API 接口）
 │   │   │   │   ├── AuthController.java        # 认证控制器（注册/登录）
 │   │   │   │   ├── TestController.java        # 测试接口
-│   │   │   │   └── RedisController.java       # Redis 测试控制器
+│   │   │   │   ├── RedisController.java       # Redis 测试控制器
+│   │   │   │   └── IdempotentController.java   # 幂等性测试控制器
 │   │   │   ├── exception/                    # 异常处理
 │   │   │   │   ├── BusinessException.java     # 自定义业务异常
 │   │   │   │   └── GlobalExceptionHandler.java # 全局异常处理器
@@ -129,12 +130,17 @@ mall-backend/
 | `JwtUtil.java` | 提供 JWT 生成、解析、过期判断等方法 |
 | `RedisUtil.java` | Redis 操作工具类，封装常用的 Redis 操作 |
 | `DistributedLockUtil.java` | 分布式锁工具类，提供锁的获取、释放等操作 |
+| `IdempotentUtil.java` | 幂等性工具类，提供 Token 生成和校验等方法 |
+| `RateLimitUtil.java` | 限流工具类，基于 Redis + Lua 脚本实现 |
 
 ### 异常处理
 
 | 文件 | 说明 |
 |------|------|
 | `BusinessException.java` | 自定义业务异常类 |
+| `RateLimitException.java` | 限流异常类 |
+| `DistributedLockException.java` | 分布式锁异常类 |
+| `IdempotentException.java` | 幂等性异常类 |
 | `GlobalExceptionHandler.java` | 全局异常处理器，统一处理各类异常 |
 
 ### 数据传输对象（DTO）
@@ -156,6 +162,17 @@ mall-backend/
 | `MQService.java` | 消息服务接口 |
 | `MQServiceImpl.java` | 消息服务实现（RocketMQ） |
 | `MQServiceMockImpl.java` | 消息服务 Mock 实现（无 MQ 时使用） |
+
+### 幂等性服务
+
+| 文件 | 说明 |
+|------|------|
+| `IdempotentService.java` | 幂等性服务接口 |
+| `IdempotentServiceImpl.java` | 幂等性服务实现 |
+| `IdempotentUtil.java` | 幂等性工具类 |
+| `@Idempotent` | 幂等性注解 |
+| `IdempotentAspect.java` | 幂等性切面 |
+| `IdempotentException.java` | 幂等性异常类 |
 
 ### 视图对象（VO）
 
@@ -380,7 +397,11 @@ http://localhost:8080/doc.html
   - [x] 用户注册消息
   - [x] 用户登录消息
   - [x] 支持无 MQ 环境的 Mock 实现
-- [x] Spring AOP 切面（限流、锁拦截）
+- [x] 接口幂等性
+  - [x] 基于 Token 的幂等性控制
+  - [x] 注解方式使用
+  - [x] 工具类方式使用
+- [x] Spring AOP 切面（限流、锁、幂等性拦截）
 - [x] MyBatis-Plus 配置（分页、逻辑删除、自动填充）
 - [x] 统一响应结果封装
 - [x] 跨域配置
@@ -440,36 +461,53 @@ if (lockUtil.tryLock("user:update:1", 5, 30)) {
 }
 ```
 
-### RocketMQ 消息队列
+### 接口幂等性
 
-**Topic 定义**
-- `user-register-topic`: 用户注册消息
-- `user-login-topic`: 用户登录消息
-- `order-created-topic`: 订单创建消息
-- `order-paid-topic`: 订单支付消息
+**幂等性是什么？**
+接口幂等性是指：无论对同一个接口调用多少次，其结果都是相同的，不会产生副作用。
 
-**消息发送**
+**作用**
+- 防止重复提交（用户快速多次点击按钮）
+- 防止网络重试导致的数据重复
+- 保证数据一致性（避免重复创建订单、重复扣款）
+
+**注解方式**
 
 ```java
-@Autowired
-private MQService mqService;
-
-// 发送用户注册消息
-mqService.sendUserRegisterMessage(userId, username, nickname, phone, email);
-
-// 发送用户登录消息
-mqService.sendUserLoginMessage(userId, username, loginIp);
+@Idempotent(expireTime = 60, info = "请勿重复提交")
+@PostMapping("/order")
+public Result<String> createOrder(@RequestBody OrderDTO dto) {
+    // 业务逻辑
+}
 ```
 
-**消息消费**
+**使用流程**
 
-消费者自动监听对应的 Topic，处理业务逻辑：
-- 用户注册：发送欢迎邮件、初始化用户数据等
-- 用户登录：更新最后登录时间、记录登录日志等
+1. 客户端先调用获取 Token 接口：
+```bash
+GET /api/idempotent/token
+# 返回: { "code": 200, "data": "abc123..." }
+```
 
-**无 MQ 环境支持**
+2. 携带 Token 调用业务接口：
+```bash
+POST /api/idempotent/test
+Headers: Idempotent-Token: abc123...
+```
 
-系统支持无 RocketMQ 环境运行，自动使用 Mock 实现，仅打印日志。
+3. 同一个 Token 只能成功调用一次，重复调用返回：
+```json
+{ "code": 409, "message": "请勿重复提交" }
+```
+
+**参数说明**
+- `expireTime`: 幂等性标识过期时间（秒），默认 60 秒
+- `info`: 重复调用时的提示信息
+
+**适用场景**
+- 创建订单、支付回调等写操作
+- 防止用户重复点击提交按钮
+- 防止网络重试导致的重复请求
 
 ### Redis 缓存应用
 
@@ -502,6 +540,8 @@ mqService.sendUserLoginMessage(userId, username, loginIp);
 - Token 黑名单: `token:blacklist:{token}`
 - 接口限流: `rate_limit:{ip}:{uri}`
 - 分布式锁: `lock:{key}`
+- 幂等性 Token: `idempotent:token:{token}`
+- 幂等性标识: `idempotent:{token}`
 
 ## 后续开发
 
@@ -566,4 +606,4 @@ mqService.sendUserLoginMessage(userId, username, loginIp);
 - [x] 已添加接口限流和防刷
 - [x] 已添加分布式锁
 - [x] 已添加消息队列（RocketMQ）
-- [ ] 建议添加接口幂等性处理
+- [x] 已添加接口幂等性处理
