@@ -24,18 +24,21 @@ export default function Layout() {
               >
                 购物商城
               </Link>
-              <div className="hidden md:flex space-x-1">
+              <div className="hidden md:flex space-x-6">
                 {navLinks.map((link) => (
                   <Link
                     key={link.path}
                     to={link.path}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                    className={`px-4 py-5 text-sm font-medium transition-all duration-300 relative ${
                       location.pathname === link.path
-                        ? 'bg-primary-50 text-primary-600'
-                        : 'text-gray-600 hover:text-primary-400 hover:bg-gray-50'
+                        ? 'text-primary-600'
+                        : 'text-gray-600 hover:text-primary-600'
                     }`}
                   >
                     {link.label}
+                    {location.pathname === link.path && (
+                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-900 rounded-full" />
+                    )}
                   </Link>
                 ))}
               </div>

@@ -24,3 +24,5 @@ spring-boot-*.log
 # Application
 application-local.yml
 application-dev.yml
+
+.claude
