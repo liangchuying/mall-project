@@ -24,6 +24,7 @@
         <jwt.version>0.12.3</jwt.version>
         <knife4j.version>4.4.0</knife4j.version>
         <redisson.version>3.25.0</redisson.version>
+        <rocketmq.version>2.3.0</rocketmq.version>
     </properties>
 
     <dependencies>
@@ -128,6 +129,13 @@
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jsr310</artifactId>
+        </dependency>
+
+        <!-- RocketMQ Spring Boot Starter -->
+        <dependency>
+            <groupId>org.apache.rocketmq</groupId>
+            <artifactId>rocketmq-spring-boot-starter</artifactId>
+            <version>${rocketmq.version}</version>
         </dependency>
 
         <!-- Spring Boot Test -->

@@ -10,6 +10,7 @@
 | MySQL | 8.x | 关系型数据库 |
 | Redis | - | 缓存、限流、分布式锁 |
 | Redisson | 3.25.0 | Redis 客户端（分布式锁） |
+| RocketMQ | 2.3.0 | 消息队列 |
 | MyBatis-Plus | 3.5.14 | ORM 框架 |
 | Spring Security | - | 安全框架 |
 | Spring AOP | - | 面向切面编程（限流、锁切面） |
@@ -60,8 +61,19 @@ mall-backend/
 │   │   │   │   └── LoginResponseVO.java       # 登录响应 VO
 │   │   │   ├── interceptor/                  # 拦截器
 │   │   │   │   └── JwtInterceptor.java        # JWT 认证拦截器
+│   │   │   ├── mq/                           # 消息队列
+│   │   │   │   ├── producer/                 # 消息生产者
+│   │   │   │   │   └── UserMQProducer.java    # 用户消息生产者
+│   │   │   │   ├── consumer/                 # 消息消费者
+│   │   │   │   │   ├── UserRegisterConsumer.java # 用户注册消费者
+│   │   │   │   │   └── UserLoginConsumer.java    # 用户登录消费者
+│   │   │   │   └── message/                  # 消息实体
+│   │   │   │       ├── UserRegisterMessage.java # 用户注册消息
+│   │   │   │       └── UserLoginMessage.java    # 用户登录消息
 │   │   │   └── utils/                        # 工具类包
 │   │   │       ├── JwtUtil.java              # JWT 生成、解析、验证工具
+│   │   │       ├── RedisUtil.java            # Redis 操作工具
+│   │   │       ├── DistributedLockUtil.java  # 分布式锁工具
 │   │   │       └── Result.java               # 统一响应结果封装
 │   │   └── resources/
 │   │       ├── application.yml               # 应用配置文件
@@ -107,6 +119,7 @@ mall-backend/
 | `RedisConfig.java` | Redis 配置类，配置序列化和缓存管理器 |
 | `RedisProperties.java` | Redis 配置属性类 |
 | `RedissonConfig.java` | Redisson 配置类，配置分布式锁客户端 |
+| `RocketMQConfig.java` | RocketMQ 配置类，定义 Topic 常量 |
 
 ### 工具类
 
@@ -115,6 +128,7 @@ mall-backend/
 | `Result.java` | 统一返回格式 `Result<T>`，包含 code、message、data 字段 |
 | `JwtUtil.java` | 提供 JWT 生成、解析、过期判断等方法 |
 | `RedisUtil.java` | Redis 操作工具类，封装常用的 Redis 操作 |
+| `DistributedLockUtil.java` | 分布式锁工具类，提供锁的获取、释放等操作 |
 
 ### 异常处理
 
@@ -129,6 +143,19 @@ mall-backend/
 |------|------|
 | `LoginDTO.java` | 登录请求参数（用户名/密码） |
 | `RegisterDTO.java` | 注册请求参数（用户名/密码/手机号） |
+
+### 消息队列（MQ）
+
+| 文件 | 说明 |
+|------|------|
+| `UserMQProducer.java` | 用户相关消息生产者 |
+| `UserRegisterConsumer.java` | 用户注册消息消费者 |
+| `UserLoginConsumer.java` | 用户登录消息消费者 |
+| `UserRegisterMessage.java` | 用户注册消息实体 |
+| `UserLoginMessage.java` | 用户登录消息实体 |
+| `MQService.java` | 消息服务接口 |
+| `MQServiceImpl.java` | 消息服务实现（RocketMQ） |
+| `MQServiceMockImpl.java` | 消息服务 Mock 实现（无 MQ 时使用） |
 
 ### 视图对象（VO）
 
@@ -349,6 +376,10 @@ http://localhost:8080/doc.html
   - [x] 注解方式使用
   - [x] 工具类方式使用
   - [x] SpEL 表达式支持
+- [x] RocketMQ 消息队列
+  - [x] 用户注册消息
+  - [x] 用户登录消息
+  - [x] 支持无 MQ 环境的 Mock 实现
 - [x] Spring AOP 切面（限流、锁拦截）
 - [x] MyBatis-Plus 配置（分页、逻辑删除、自动填充）
 - [x] 统一响应结果封装
@@ -408,6 +439,37 @@ if (lockUtil.tryLock("user:update:1", 5, 30)) {
     }
 }
 ```
+
+### RocketMQ 消息队列
+
+**Topic 定义**
+- `user-register-topic`: 用户注册消息
+- `user-login-topic`: 用户登录消息
+- `order-created-topic`: 订单创建消息
+- `order-paid-topic`: 订单支付消息
+
+**消息发送**
+
+```java
+@Autowired
+private MQService mqService;
+
+// 发送用户注册消息
+mqService.sendUserRegisterMessage(userId, username, nickname, phone, email);
+
+// 发送用户登录消息
+mqService.sendUserLoginMessage(userId, username, loginIp);
+```
+
+**消息消费**
+
+消费者自动监听对应的 Topic，处理业务逻辑：
+- 用户注册：发送欢迎邮件、初始化用户数据等
+- 用户登录：更新最后登录时间、记录登录日志等
+
+**无 MQ 环境支持**
+
+系统支持无 RocketMQ 环境运行，自动使用 Mock 实现，仅打印日志。
 
 ### Redis 缓存应用
 
@@ -503,5 +565,5 @@ if (lockUtil.tryLock("user:update:1", 5, 30)) {
 - [x] 已集成 Redis 缓存
 - [x] 已添加接口限流和防刷
 - [x] 已添加分布式锁
-- [ ] 建议添加消息队列（RabbitMQ/RocketMQ）
+- [x] 已添加消息队列（RocketMQ）
 - [ ] 建议添加接口幂等性处理
