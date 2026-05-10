@@ -12,7 +12,15 @@ public interface UserService {
 
     User getUserByUsername(String username);
 
+    User getUserByPhone(String phone);
+
     void logout(String token);
 
     void updateUserWithLock(User user);
+
+    void sendResetCode(String phone);
+
+    void resetPassword(String phone, String code, String newPassword);
+
+    void changePassword(Long userId, String oldPassword, String newPassword);
 }

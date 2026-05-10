@@ -36,6 +36,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private static final String USER_CACHE_PREFIX = "user:";
     private static final long USER_CACHE_EXPIRE = 30;
     private static final String TOKEN_BLACKLIST_PREFIX = "token:blacklist:";
+    private static final String CODE_PREFIX = "verify:code:";
+    private static final long CODE_EXPIRE = 5;
 
     @Override
     @Transactional
@@ -168,5 +170,80 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         redisUtil.delete(cacheKey);
         String usernameKey = USER_CACHE_PREFIX + "username:" + user.getUsername();
         redisUtil.delete(usernameKey);
+    }
+
+    @Override
+    public User getUserByPhone(String phone) {
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(User::getPhone, phone);
+        return baseMapper.selectOne(wrapper);
+    }
+
+    @Override
+    public void sendResetCode(String phone) {
+        User user = getUserByPhone(phone);
+        if (user == null) {
+            throw new RuntimeException("手机号未注册");
+        }
+
+        String code = String.format("%06d", (int) ((Math.random() * 9 + 1) * 100000));
+        String key = CODE_PREFIX + phone;
+        redisUtil.set(key, code, CODE_EXPIRE, TimeUnit.MINUTES);
+
+        System.out.println("========== 验证码发送 ==========");
+        System.out.println("手机号: " + phone);
+        System.out.println("验证码: " + code);
+        System.out.println("有效期: " + CODE_EXPIRE + " 分钟");
+        System.out.println("==============================");
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(String phone, String code, String newPassword) {
+        String key = CODE_PREFIX + phone;
+        String storedCode = (String) redisUtil.get(key);
+        if (storedCode == null) {
+            throw new RuntimeException("验证码已过期或不存在");
+        }
+
+        if (!storedCode.equals(code)) {
+            throw new RuntimeException("验证码错误");
+        }
+
+        User user = getUserByPhone(phone);
+        if (user == null) {
+            throw new RuntimeException("用户不存在");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        baseMapper.updateById(user);
+
+        redisUtil.delete(key);
+
+        String cacheKey = USER_CACHE_PREFIX + user.getId();
+        redisUtil.delete(cacheKey);
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(Long userId, String oldPassword, String newPassword) {
+        User user = getUserById(userId);
+        if (user == null) {
+            throw new RuntimeException("用户不存在");
+        }
+
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new RuntimeException("旧密码错误");
+        }
+
+        if (passwordEncoder.matches(newPassword, user.getPassword())) {
+            throw new RuntimeException("新密码不能与旧密码相同");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        baseMapper.updateById(user);
+
+        String cacheKey = USER_CACHE_PREFIX + userId;
+        redisUtil.delete(cacheKey);
     }
 }

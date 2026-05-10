@@ -40,6 +40,7 @@ mall-backend/
 │   │   │   │   └── WebConfig.java             # Web 配置
 │   │   │   ├── controller/                   # 控制器层（API 接口）
 │   │   │   │   ├── AuthController.java        # 认证控制器（注册/登录）
+│   │   │   │   ├── PasswordController.java     # 密码控制器（重置/修改）
 │   │   │   │   ├── TestController.java        # 测试接口
 │   │   │   │   ├── RedisController.java       # Redis 测试控制器
 │   │   │   │   └── IdempotentController.java   # 幂等性测试控制器
@@ -149,6 +150,9 @@ mall-backend/
 |------|------|
 | `LoginDTO.java` | 登录请求参数（用户名/密码） |
 | `RegisterDTO.java` | 注册请求参数（用户名/密码/手机号） |
+| `SendCodeDTO.java` | 发送验证码请求参数（手机号） |
+| `ResetPasswordDTO.java` | 重置密码请求参数（手机号/验证码/新密码） |
+| `ChangePasswordDTO.java` | 修改密码请求参数（旧密码/新密码） |
 
 ### 消息队列（MQ）
 
@@ -361,6 +365,29 @@ mvn spring-boot:run
 - **登出**: `POST /api/auth/logout` (需携带 JWT Token)
 - **获取用户信息**: `GET /api/auth/info` (需携带 JWT Token)
 
+#### 密码管理接口
+- **发送重置密码验证码**: `POST /api/password/send-code`
+  ```json
+  {
+    "phone": "13800138000"
+  }
+  ```
+- **重置密码**: `POST /api/password/reset`
+  ```json
+  {
+    "phone": "13800138000",
+    "code": "123456",
+    "newPassword": "newpassword123"
+  }
+  ```
+- **修改密码**: `POST /api/password/change` (需携带 JWT Token)
+  ```json
+  {
+    "oldPassword": "oldpassword123",
+    "newPassword": "newpassword123"
+  }
+  ```
+
 #### 接口文档
 项目已集成 Knife4j 接口文档，启动后访问：
 ```
@@ -408,6 +435,10 @@ http://localhost:8080/doc.html
 - [x] Knife4j 接口文档
 - [x] 用户注册/登录接口
 - [x] 用户登出接口
+- [x] 密码重置功能
+  - [x] 发送验证码
+  - [x] 通过验证码重置密码
+  - [x] 修改密码
 - [x] 全局异常处理
 - [x] 参数校验（@Valid/@Validated）
 
@@ -551,8 +582,6 @@ Headers: Idempotent-Token: abc123...
 
 #### 用户模块
 - [ ] Token 刷新机制
-- [ ] 登出（Redis 黑名单）
-- [ ] 密码重置
 - [ ] 查看和修改个人信息
 - [ ] 收货地址管理
 - [ ] 用户成长系统（等级、积分）

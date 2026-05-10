@@ -159,6 +159,126 @@ curl -X POST http://localhost:8080/api/auth/logout \
 
 ---
 
+## 密码管理模块
+
+### 1. 发送重置密码验证码
+
+**接口信息**
+- **接口路径**: `/password/send-code`
+- **请求方式**: `POST`
+- **Content-Type**: `application/json`
+- **是否需要认证**: 否
+
+**请求参数**
+
+| 参数名 | 类型 | 必填 | 说明 | 示例值 |
+|--------|------|------|------|--------|
+| phone | String | 是 | 手机号 | 13800138000 |
+
+**请求示例**
+
+```bash
+curl -X POST http://localhost:8080/api/password/send-code \
+  -H "Content-Type: application/json" \
+  -d '{
+    "phone": "13800138000"
+  }'
+```
+
+**测试用例**
+
+| 用例编号 | 测试场景 | 预期结果 |
+|----------|----------|----------|
+| TC-022 | 正常发送验证码 | 返回 code 200，验证码发送成功 |
+| TC-023 | 手机号未注册 | 返回 code 500，提示"手机号未注册" |
+| TC-024 | 手机号格式错误 | 返回参数校验错误 |
+| TC-025 | 手机号为空 | 返回参数校验错误 |
+
+---
+
+### 2. 重置密码
+
+**接口信息**
+- **接口路径**: `/password/reset`
+- **请求方式**: `POST`
+- **Content-Type**: `application/json`
+- **是否需要认证**: 否
+
+**请求参数**
+
+| 参数名 | 类型 | 必填 | 说明 | 示例值 |
+|--------|------|------|------|--------|
+| phone | String | 是 | 手机号 | 13800138000 |
+| code | String | 是 | 验证码（6位） | 123456 |
+| newPassword | String | 是 | 新密码（至少6位） | newpassword123 |
+
+**请求示例**
+
+```bash
+curl -X POST http://localhost:8080/api/password/reset \
+  -H "Content-Type: application/json" \
+  -d '{
+    "phone": "13800138000",
+    "code": "123456",
+    "newPassword": "newpassword123"
+  }'
+```
+
+**测试用例**
+
+| 用例编号 | 测试场景 | 预期结果 |
+|----------|----------|----------|
+| TC-026 | 正常重置密码 | 返回 code 200，密码重置成功 |
+| TC-027 | 验证码错误 | 返回 code 500，提示"验证码错误" |
+| TC-028 | 验证码已过期 | 返回 code 500，提示"验证码已过期或不存在" |
+| TC-029 | 手机号未注册 | 返回 code 500，提示"用户不存在" |
+| TC-030 | 新密码少于6位 | 返回参数校验错误 |
+| TC-031 | 验证码位数错误 | 返回参数校验错误 |
+
+---
+
+### 3. 修改密码
+
+**接口信息**
+- **接口路径**: `/password/change`
+- **请求方式**: `POST`
+- **Content-Type**: `application/json`
+- **是否需要认证**: 是
+
+**请求参数**
+
+| 参数名 | 类型 | 必填 | 说明 | 示例值 |
+|--------|------|------|------|--------|
+| oldPassword | String | 是 | 旧密码 | oldpassword123 |
+| newPassword | String | 是 | 新密码（至少6位） | newpassword123 |
+
+**请求示例**
+
+```bash
+curl -X POST http://localhost:8080/api/password/change \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer {your_token_here}" \
+  -d '{
+    "oldPassword": "oldpassword123",
+    "newPassword": "newpassword123"
+  }'
+```
+
+**测试用例**
+
+| 用例编号 | 测试场景 | 预期结果 |
+|----------|----------|----------|
+| TC-032 | 正常修改密码 | 返回 code 200，密码修改成功 |
+| TC-033 | 旧密码错误 | 返回 code 500，提示"旧密码错误" |
+| TC-034 | 新旧密码相同 | 返回 code 500，提示"新密码不能与旧密码相同" |
+| TC-035 | 旧密码为空 | 返回参数校验错误 |
+| TC-036 | 新密码为空 | 返回参数校验错误 |
+| TC-037 | 新密码少于6位 | 返回参数校验错误 |
+| TC-038 | 未携带 Token | 返回 code 401，提示"未登录或token无效" |
+| TC-039 | Token 已过期 | 返回 code 401，提示"token已过期" |
+
+---
+
 ## 附录
 
 ### HTTP 状态码说明
