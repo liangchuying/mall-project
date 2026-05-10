@@ -99,7 +99,13 @@ mall-backend/
 |------|------|
 | `pom.xml` | Maven 项目配置，定义依赖版本和构建插件 |
 | `application.yml` | Spring Boot 应用配置，包含数据库、JWT、服务器端口等 |
+| `application-dev.yml` | 开发环境配置 |
+| `application-prod.yml` | 生产环境配置 |
 | `sql/init.sql` | 数据库初始化脚本，包含建库和建表语句 |
+| `Dockerfile` | Docker 镜像构建配置 |
+| `docker-compose.yml` | Docker Compose 编排配置 |
+| `.dockerignore` | Docker 构建忽略文件 |
+| `.env.example` | 环境变量配置模板 |
 
 ### 核心类文件
 
@@ -338,10 +344,30 @@ logging:
 
 ### 3. 启动项目
 
+**方式一：Maven 启动**
+
 ```bash
-cd mall-system
+cd mall-backend
 mvn spring-boot:run
 ```
+
+**方式二：Docker 部署（推荐）**
+
+```bash
+# 复制环境变量配置
+cp .env.example .env
+
+# 修改环境变量（重要！请修改默认密码）
+vim .env
+
+# 构建并启动所有服务
+docker-compose up -d
+
+# 查看日志
+docker-compose logs -f app
+```
+
+详细的 Docker 部署说明请查看 [DOCKER.md](./DOCKER.md)
 
 或使用 IDE 运行 `MallApplication` 主类
 
